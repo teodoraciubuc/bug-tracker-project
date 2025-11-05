@@ -25,6 +25,6 @@
 - `POST /api/bugs` – adaugă un bug nou
 - `PATCH /api/bugs/:id/status` – actualizează statusul unui bug
 - `GET /api/notifications` - returneaza notificarile utilizatorului autentificat
-- `PATCH /api/notifications/:id/read` - marcheaza o notificare ca citita
+- `PATCH /api/notifications/:id/read` - marcheaza o notificare ca si citita
 - `GET /api/bugs/:id/comments` - obtine comentariile unui bug
 - `POST /api/bugs/:id/comments` - adauga un comentariu nou la bug
