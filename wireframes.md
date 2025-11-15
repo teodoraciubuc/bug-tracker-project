@@ -19,7 +19,7 @@ Acest document descrie paginile aplicației și elementele vizuale principale, c
 
 ## 1️⃣ **Login Page**
 
-**Elemente wireframe:**
+**Elemente wireframe: **
 
 - Câmpuri: Email, Parolă
 - Buton „Login”
