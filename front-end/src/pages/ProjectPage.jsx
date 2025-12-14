@@ -1,12 +1,16 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
-import "../styles/Dashboard.css"; // Folosim același layout pentru fullscreen
+import "../styles/Dashboard.css";
 
 function ProjectPage() {
   const { id } = useParams();
 
-  // MOCK BUGS
-  const [bugs] = useState([
+  const [bugs] = useState(() => {
+  const storedBugs = JSON.parse(
+    localStorage.getItem(`project-${id}-bugs`)
+  );
+
+  const mockBugs=[
     {
       id: 1,
       title: "Login error on mobile",
@@ -23,7 +27,17 @@ function ProjectPage() {
       status: "In Progress",
       assignee: "Teodora",
     },
-  ]);
+  ]
+  if (!storedBugs) {
+    localStorage.setItem(
+      `project-${id}-bugs`,
+      JSON.stringify(mockBugs)
+    );
+    return mockBugs;
+  }
+
+  return storedBugs;
+});
 
   return (
     <div className="dashboard-container">
