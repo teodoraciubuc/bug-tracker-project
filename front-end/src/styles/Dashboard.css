@@ -180,17 +180,6 @@
   background-color: #272b45;
 }
 
-/* Sidebar container */
-.sidebar {
-  width: 250px;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  overflow: hidden; 
-}
-
-
 /* Listă proiecte */
 .sidebar-projects {
   flex: 1;
@@ -231,4 +220,5 @@
   color: white;
   font-weight: bold;
   width: 100%;
+  margin-bottom: 24px;
 }

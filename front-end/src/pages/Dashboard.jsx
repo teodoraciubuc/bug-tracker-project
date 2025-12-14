@@ -32,7 +32,7 @@ function Dashboard() {
       <aside className="sidebar">
   <h3 className="sidebar-title">PROJECTS</h3>
 
-  {/* LISTA PROIECTELOR */}
+  {/* LISTA PROoj*/}
   <div className="sidebar-projects">
     {projects.map((project) => (
       <button
@@ -45,7 +45,7 @@ function Dashboard() {
     ))}
   </div>
 
-  {/* FORMULAR JOS */}
+  {/* addProject */}
   <div className="sidebar-bottom">
     <form
       className="sidebar-add-form"
