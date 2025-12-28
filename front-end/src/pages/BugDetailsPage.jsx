@@ -1,85 +1,94 @@
-import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import api from "../api/axios";
 import "../styles/BugDetailsPage.css";
 
 function BugDetailsPage() {
   const { id: bugId } = useParams();
 
-  let foundBug = null;
-  let projectId = null;
+  const navigate = useNavigate();
 
-  Object.keys(localStorage).forEach((key) => {
-    if (key.startsWith("project-") && key.endsWith("-bugs")) {
-      const bugs = JSON.parse(localStorage.getItem(key)) || [];
+  const [bug, setBug] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-      bugs.forEach((bug) => {
-        if (String(bug.id) === String(bugId)) {
-          foundBug = bug;
-          projectId = key.replace("project-", "").replace("-bugs", "");
-        }
-      });
+    useEffect(() => {
+    if (!localStorage.getItem("token")) {
+      navigate("/");
     }
-  });
+  }, [navigate]); 
 
-  if (!foundBug) {
-    return <p className="bug-not-found">Bug not found</p>;
-  }
+   useEffect(() => {
+    api
+      .get(`/bugs/bug/${bugId}`)
+      .then((res) => {
+        setBug(res.data);
+        setLoading(false);
+      })
+      .catch(() => {
+        alert("Bug not found or access denied");
+        navigate("/dashboard");
+      });
+  }, [bugId, navigate]);
+
+    const resolveBug = async () => {
+    try {
+      const res = await api.patch(`/bugs/${bugId}/status`, {
+        status: "RESOLVED",
+      });
+
+      setBug(res.data);
+    } catch (err) {
+      alert(err.response?.data?.message || "Cannot resolve bug");
+    }
+  };
+
+  if (loading) return <p>Loading...</p>;
+  if (!bug) return <p className="bug-not-found">Bug not found</p>;
+  
 
   return (
   <div className="bug-details-page">
     <div className="bug-card">
-      <h1 className="bug-title">{foundBug.title}</h1>
+      <h1 className="bug-title">{bug.title}</h1>
 
       <p className="bug-description">
-        {foundBug.description || "No description"}
+        {bug.description || "No description"}
       </p>
 
       <div className="bug-info">
         <span
-          className={`badge severity ${foundBug.severity.toLowerCase()}`}
+          className={`badge severity ${bug.severity.toLowerCase()}`}
         >
-          Severity: {foundBug.severity}
+          Severity: {bug.severity}
         </span>
 
         <span
-          className={`badge priority ${foundBug.priority.toLowerCase()}`}
+          className={`badge priority ${bug.priority.toLowerCase()}`}
         >
-          Priority: {foundBug.priority}
+          Priority: {bug.priority}
         </span>
 
         <span
-          className={`badge status ${foundBug.status.toLowerCase()}`}
+          className={`badge status ${bug.status.toLowerCase()}`}
         >
-          Status: {foundBug.status}
+          Status: {bug.status}
         </span>
       </div>
 
       <div className="bug-actions">
         <button
           className="back-btn"
-          onClick={() => (window.location.href = `/project/${projectId}`)}
+           onClick={() => navigate(`/project/${bug.projectId}`)}
         >
           ← Back to Project
         </button>
 
         <button
           className="resolve-btn"
-          onClick={() => {
-            foundBug.status = "Resolved";
-
-            const bugs = JSON.parse(
-              localStorage.getItem(`project-${projectId}-bugs`)
-            );
-
-            localStorage.setItem(
-              `project-${projectId}-bugs`,
-              JSON.stringify(bugs)
-            );
-
-            window.location.reload();
-          }}
-          disabled={foundBug.status === "Resolved"}
+          onClick={resolveBug}
+          disabled={bug.status === "RESOLVED"}
         >
-          {foundBug.status === "Resolved" ? "Resolved" : "Resolve Bug"}
+          {bug.status === "RESOLVED" ? "Resolved" : "Resolve Bug"}
         </button>
       </div>
     </div>

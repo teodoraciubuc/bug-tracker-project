@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import "../styles/Dashboard.css";
 
 function ProjectPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
+
 
   const [bugs,setBugs] = useState([])
    useEffect(() => {
@@ -12,6 +14,16 @@ function ProjectPage() {
       window.location.href = "/";
     }
   }, []);
+
+  const joinAsTester = async () => {
+  try {
+    await api.post(`/projects/${id}/join`);
+    alert("You are now a tester in this project!");
+    window.location.reload(); // sau refetch proiect
+  } catch (err) {
+    alert(err.response?.data?.message || "Cannot join project");
+  }
+};
   useEffect(() => {
     api
       .get(`/bugs/projects/${id}/bugs`)
@@ -37,6 +49,12 @@ function ProjectPage() {
           ⬅ Back to Dashboard
         </button>
 
+        <div style={{ marginTop: "auto" }} />
+
+        <button onClick={joinAsTester} className="sidebar-add-btn" style = {{ marginBottom: "-200px"}}>
+          Join project as Tester
+        </button> 
+
         <button
           className="sidebar-add-btn"
           onClick={() => (window.location.href = `/project/${id}/add-bug`)}
@@ -53,7 +71,9 @@ function ProjectPage() {
           {bugs.map((bug) => (
             <div
               key={bug.id}
-              className="project-card">
+              className="project-card"
+              onClick={() => navigate(`/bug/${bug.id}`)}
+              style={{ cursor: "pointer" }}>
               <h3>{bug.title}</h3>
               <p>
                 Severity: <strong>{bug.severity}</strong> | Priority:{" "}

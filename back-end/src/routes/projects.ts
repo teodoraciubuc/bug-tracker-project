@@ -82,19 +82,26 @@ router
             const exists= await prisma.projectMember.findFirst({
                 where: {projectId : id, userId}
             })
-            if(exists){
-                throw{status: 409, message: 'You are already part of this project'}
-            }
-
-            const member= await prisma.projectMember.create({
-                data:{
-                    userId,
-                    projectId: id,
-                    role:'TST'
+            if (!exists) {
+            const created = await prisma.projectMember.create({
+                data: {
+                projectId: id,
+                userId,
+                role: 'TST'
                 }
-            })
+            });
+            return res.json({ message: 'Joined as TST', member: created });
+    }
+            if (exists.role === 'TST') {
+                throw { status: 409, message: 'You are already a tester in this project' };
+    }
 
-            res.json({message: 'Joined as TST', member})
+            const updated = await prisma.projectMember.update({
+                where: { id: exists.id },
+                data: { role: 'TST' }
+            });
+
+            res.json({message: 'Joined as TST', exists: updated})
         }catch(err){
             next(err);
         }

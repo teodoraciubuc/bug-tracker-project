@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {useParams} from "react-router-dom";
+import api from "../api/axios";
 import "../styles/AddBugPage.css";
 
 function AddBugPage() {
@@ -7,14 +8,36 @@ function AddBugPage() {
   const [description, setDescription] = useState("");
   const [severity, setSeverity] = useState("LOW");
   const [priority, setPriority] = useState("LOW");
-  const { id } = useParams();
+  const { id: projectId } = useParams();
 
+useEffect(() => {
+    if (!localStorage.getItem("token")) {
+      window.location.href = "/";
+    }
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      await api.post(`/bugs/projects/${projectId}/bugs`, {
+        title,
+        description,
+        severity,
+        priority,
+      }); 
+
+     window.location.href = `/project/${projectId}`;
+    } catch {
+      alert("Eroare la creare bug");
+    }
+  };
 
   return (
     <div className="add-bug-page">
       <h1 className="add-bug-title">Add Bug🐞</h1>
 
-      <div className="add-bug-form">
+      <form className="add-bug-form" onSubmit={handleSubmit}>
         {/* TITLE */}
         <div className="form-group">
           <label>Title</label>
@@ -22,6 +45,7 @@ function AddBugPage() {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            required
           />
         </div>
 
@@ -32,6 +56,7 @@ function AddBugPage() {
             rows={4}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            required
           />
         </div>
 
@@ -60,38 +85,11 @@ function AddBugPage() {
             <option value="HIGH">High</option>
           </select>
         </div>
-
-        {/* SUBMIT (temporar fara backend) */}
         
-          <button
-            className="submit-bug-btn"
-
-            onClick={() => {
-            const newBug = {
-            id: Date.now(),
-            title,
-            description,
-            severity,
-            priority,
-            status: "Open",
-            assignee: null,
-          };
-
-
-            const existingBugs =
-              JSON.parse(localStorage.getItem(`project-${id}-bugs`)) || [];
-
-            localStorage.setItem(
-              `project-${id}-bugs`,
-              JSON.stringify([...existingBugs, newBug])
-            );
-
-            window.location.href = `/project/${id}`;
-          }}
-        >
+          <button type="submit" className="submit-bug-btn">
           Add Bug
         </button>
-      </div>
+      </form>
     </div>
   );
 }

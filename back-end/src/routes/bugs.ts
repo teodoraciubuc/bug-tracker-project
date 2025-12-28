@@ -74,6 +74,38 @@ router
         }
     })
 
+    .get('/bug/:bugId', requireAuth, async (req: any, res, next) => {
+  try {
+    const { bugId } = req.params;
+    const userId = req.user.id;
+
+    const bug = await prisma.bug.findUnique({
+      where: { id: bugId },
+    });
+
+    if (!bug) {
+      throw { status: 404, message: 'Bug not found' };
+    }
+
+    // verificam ca userul face parte din proiect
+    const member = await prisma.projectMember.findFirst({
+      where: {
+        userId,
+        projectId: bug.projectId,
+      },
+    });
+
+    if (!member) {
+      throw { status: 403, message: 'Access denied to this bug' };
+    }
+
+    res.json(bug);
+  } catch (err) {
+    next(err);
+  }
+})
+
+
 // ASSIGN BUG -> doar MP 
 
     .patch('/:bugId/assign', requireAuth, async (req: any, res, next)=>{
@@ -128,17 +160,10 @@ router
                 throw{ status: 403, message: 'Only MPs can update bug status'};
             }
 
-            if(status == 'RESOLVED'){
-                if(!commitUrl || !commitUrl.startsWith ('https://github.com/')){
-                    throw{status: 400, message: 'RESOLVED requires a valid GitHub commit URL'};
-                }
-            }
-
             const updated = await prisma.bug.update({
                 where: {id: bugId},
                 data: {
                     status,
-                    commitUrl: commitUrl || null
                 }
             })
             res.json(updated);
