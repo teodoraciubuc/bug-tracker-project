@@ -5,42 +5,63 @@
 // - DELETE /projects/:id -> MP sterge proiectul
 
 import { Router } from "express";
-import { requireAuth, requireRole } from "../middlewares/authMiddlewares";
+import { requireAuth } from "../middlewares/authMiddlewares.js";
 import { PrismaClient } from "@prisma/client";
 
 const router= Router();
 const prisma= new PrismaClient();
-router.get('/', requireAuth, async (req: any, res, next) => {
-  try {
-    const userId = req.user.id;
 
-    const projects = await prisma.project.findMany({
-      where: {
-        members: {
-          some: {
-            userId: userId
-          }
+//GET PROJECTS -> returneaza proiectele in care utilizatorul este MP sau TST
+router.get('/my', requireAuth, async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+
+        const projects = await prisma.project.findMany({
+        where: {
+            members: {
+            some: {
+                userId: userId
+                }
+            }
         }
-      }
-    });
-
-    res.json(projects);
-  } catch (err) {
-    next(err);
-  }
+    }); 
+        res.json(projects);
+    } catch (err) {
+        next(err);
+    }
 });
 
+//GET PROJECTS -> returneaza toate proiectele postate de catre toti utilizatorii
+router.get('/', requireAuth , async(req,res,next)=>{
+    try{
+        const projects= await prisma.project.findMany();
+        res.json(projects);
+    } catch (err){
+        next(err)
+    }
+})
+    
 //CREATE PROJECT -> orice user logat, devine automat MP in proiectul creat
 router
-    .post('/', requireAuth, async(req: any,res, next)=>{
+    .post('/', requireAuth, async(req,res, next)=>{
     try{
         const {name, description, repoUrl } = req.body;
 
         if(!name || !repoUrl){
             throw {status: 400, message: 'Name and repoURL are mandatory'}
         }
-
-        const user= (req as any).user;
+        
+        const existing= await prisma.project.findFirst({
+            where: {repoUrl}
+        })
+        if(existing){
+            throw{
+                status: 409,
+                message: 'A project with this repository already exists'
+            }
+        }
+        
+        const user= req.user;
         const project = await prisma.project.create({
             data:{
                 name,
@@ -49,6 +70,7 @@ router
                 createdById: user.id
             }
         })
+
 
         //adaugarea automata ca MP in proiectul creat
         await prisma.projectMember.create({
@@ -67,7 +89,7 @@ router
 
 //JOIN -> userul intra in proiect ca TST
 
-    .post('/:id/join', requireAuth, async (req :any, res, next)=>{
+    .post('/:id/join', requireAuth, async (req, res, next)=>{
         try{
             const {id} = req.params;
             const userId = req.user.id;
@@ -109,7 +131,7 @@ router
 
 //UPDATE -> MP din proiect poate modifica informatiile
 
-    .patch('/:id', requireAuth, async(req: any, res,next)=>{
+    .patch('/:id', requireAuth, async(req, res,next)=>{
         try{
             const {id} = req.params;
             const {name, description, repoUrl} =req.body;
@@ -129,7 +151,7 @@ router
                 throw{status: 403, message: 'Only MPs from this project can update it'}
             }
 
-            const updateData : any ={};
+            const updateData= {};
             if(name !== undefined){ 
                 updateData.name=name;
             }
@@ -153,7 +175,7 @@ router
 
 // DELETE -> doar creatorul (MP) proiectului
 
-    .delete('/:id', requireAuth, async(req: any, res, next)=>{
+    .delete('/:id', requireAuth, async(req, res, next)=>{
         try{
             const {id} = req.params;
             const userId= req.user.id;

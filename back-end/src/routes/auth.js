@@ -10,7 +10,10 @@ import jwt from 'jsonwebtoken';
 const prisma=new PrismaClient();
 const router= Router();
 
-const secret= process.env.JWT_SECRET!;
+const secret= process.env.JWT_SECRET;
+if(!secret){
+    throw new Error('JWT_SECRET is not defined')
+}
 
 
 // REGISTER - valideaza datele primite, verifica unicitatea emailului, hash-uieste parola, salveaza userul in BD

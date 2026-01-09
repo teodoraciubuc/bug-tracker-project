@@ -6,21 +6,22 @@
 // - editarea detaliilor unui bug ca MP/TST
 
 import { Router } from "express";
-import { requireAuth } from "../middlewares/authMiddlewares";
-import { PrismaClient, BugStatus } from "@prisma/client";
+import { requireAuth } from "../middlewares/authMiddlewares.js";
+import { PrismaClient} from "@prisma/client";
+import { awardXP } from "../utils/xp.js";
 
 const prisma= new PrismaClient();
 const router= Router();
 
 // REPORT BUG -> doar TST din proiect
 router
-    .post('/projects/:projectId/bugs', requireAuth, async (req: any, res, next) =>{
+    .post('/projects/:projectId/bugs', requireAuth, async (req, res, next) =>{
         try{
             const {projectId} = req.params;
             const userId = req.user.id;
-            const {title, description, severity, priority} = req.body;
+            const {title, description, severity, priority, commitUrl} = req.body;
 
-            if(!title || !description || !severity || !priority){
+            if(!title || !description || !severity || !priority || !commitUrl){
                throw {status: 400, message: 'All fields are mandatory'};
             }
             
@@ -38,10 +39,18 @@ router
                     description,
                     severity,
                     priority,
+                    commitUrl,
                     projectId,
                     reporterId: userId
                 }
             })
+
+            await awardXP(
+                userId,
+                10,
+                'Bug reported',
+                bug.id
+            )
             res.status(201).json(bug);
         }catch(err){
             next(err);
@@ -50,7 +59,7 @@ router
 
 // GET BUGS -> din proiecte, ca MP/TST
 
-    .get('/projects/:projectId/bugs', requireAuth, async (req: any, res, next)=>{
+    .get('/projects/:projectId/bugs', requireAuth, async (req, res, next)=>{
         try{
             const {projectId} = req.params;
             const {status} = req.query;
@@ -65,7 +74,7 @@ router
             }
 
             const bugs = await prisma.bug.findMany({
-                where: status ? {projectId, status: status as BugStatus} : {projectId},
+                where: status ? {projectId, status} : {projectId},
                 orderBy: {createdAt: "desc"}
             })
             res.json(bugs);
@@ -74,7 +83,7 @@ router
         }
     })
 
-    .get('/bug/:bugId', requireAuth, async (req: any, res, next) => {
+    .get('/bug/:bugId', requireAuth, async (req, res, next) => {
   try {
     const { bugId } = req.params;
     const userId = req.user.id;
@@ -108,7 +117,7 @@ router
 
 // ASSIGN BUG -> doar MP 
 
-    .patch('/:bugId/assign', requireAuth, async (req: any, res, next)=>{
+    .patch('/:bugId/assign', requireAuth, async (req, res, next)=>{
         try{
             const {bugId} = req.params;
             const userId= req.user.id;
@@ -132,6 +141,14 @@ router
                     status: 'IN_PROGRESS'
                 }
             })
+
+            await prisma.notification.create({
+                data: {
+                    userId: userId,
+                    type: "BUG_ASSIGNED",
+                    message: `You have been assigned to bug "${bug.title}"`
+                }
+            })
             res.json(updated);
         }catch(err){
             next(err);
@@ -140,7 +157,7 @@ router
 
 // UPDATE STATUS  -> doar MP
 
-    .patch('/:bugId/status', requireAuth, async (req: any, res, next)=>{
+    .patch('/:bugId/status', requireAuth, async (req, res, next)=>{
         try{
             const {bugId} = req.params;
             const {status, commitUrl} = req.body;
@@ -160,12 +177,64 @@ router
                 throw{ status: 403, message: 'Only MPs can update bug status'};
             }
 
+            if(status=== "RESOLVED"){
+                if(!bug.assignedId){
+                    throw {
+                        status: 400,
+                        message: 'Bug must be assigned before it can be resolved'
+                    }
+                }
+
+                if(bug.assignedId !== userId){
+                    throw {
+                        status: 403,
+                        message: 'Only the assigned MP can resolve this bug'
+                    }
+                }
+
+                if(!commitUrl){
+                    throw{
+                        status: 400,
+                        message: 'Commit URL is required to resolve the bug'
+                    }
+                }
+            }
             const updated = await prisma.bug.update({
                 where: {id: bugId},
                 data: {
                     status,
+                    commitUrl
                 }
             })
+
+            if(bug.status !== status){
+                await prisma.bugStatusHistory.create({
+                    data: {
+                        bugId: bug.id,
+                        changedById: userId,
+                        fromStatus: bug.status,
+                        toStatus: status,
+                        commitUrl
+                    }
+                })
+            }
+
+            if(bug.status !== "RESOLVED" && status === "RESOLVED" && bug.assignedId){
+                await awardXP(
+                    bug.assignedId,
+                    30,
+                    "Bug resolved",
+                    bug.id
+                )
+
+                await prisma.notification.create({
+                    data: {
+                        userId: bug.assignedId,
+                        type:"BUG_RESOLVED",
+                        message: `Bug "${bug.title}" has been resolved`
+                    }
+                })
+            }
             res.json(updated);
         }catch(err){
             next(err);
@@ -174,7 +243,7 @@ router
 
 // UPDATE DETAILS -> TST/MP updateaza informatiile bug-ului
 
-    .patch('/:bugId', requireAuth, async(req: any, res, next)=>{
+    .patch('/:bugId', requireAuth, async(req, res, next)=>{
         try{
             const {bugId} = req.params;
             const {title, description, severity, priority} = req.body;
@@ -205,6 +274,44 @@ router
             })
             res.json(updated);
         }catch(err){
+            next(err);
+        }
+    })
+
+//GET STATUS HISTORY -> afiseaza istoricul statusurilor fiecarui bug
+    .get('/:bugId/status-history', requireAuth, async (req, res, next)=>{
+        try{
+            const {bugId} = req.params;
+            const userId = req.user.id;
+
+            const bug = await prisma.bug.findUnique({
+                where: {id: bugId},
+            })
+            if(!bug){
+                throw {status: 404, message: "Bug not found"};
+            }
+
+            const member = await prisma.projectMember. findFirst({
+                where: {
+                    userId,
+                    projectId: bug.projectId
+                }
+            })
+            if(!member){
+                throw{status: 403, message: "Access denied"}
+            }
+
+            const history = await prisma.bugStatusHistory.findMany({
+                where: {bugId},
+                include: {
+                    changedBy: {
+                        select : {id:true, name: true}
+                    }
+                },
+                orderBy : {createdAt: "asc"}
+            })
+            res.json(history);
+        } catch(err){
             next(err);
         }
     })

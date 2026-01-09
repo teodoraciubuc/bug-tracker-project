@@ -6,14 +6,14 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from 'bcrypt';
-import { requireAuth } from "../middlewares/authMiddlewares";
+import { requireAuth } from "../middlewares/authMiddlewares.js";
 
 const prisma= new PrismaClient();
 const router= Router();
 
 // GET /users/me -> returneaza datele utilizatorului autentificat
     router
-        .get('/me', requireAuth, async(req: any, res, next)=>{
+        .get('/me', requireAuth, async(req, res, next)=>{
             try{
                 const userId = req.user.id;
 
@@ -52,7 +52,7 @@ const router= Router();
         })
 
 // PATCH /users/me -> actualizare nume, email si parola
-        .patch('/me', requireAuth, async (req:any, res, next)=>{
+        .patch('/me', requireAuth, async (req, res, next)=>{
             try{
                 const userId= req.user.id;
                 const {name, email, password} = req.body;
@@ -61,7 +61,7 @@ const router= Router();
                     throw {status: 400, message: 'Nothing to update'};
                 }
 
-                const updateData : any ={};
+                const updateData= {};
 
                 if(name !== undefined){
                     updateData.name=name;
@@ -102,7 +102,7 @@ const router= Router();
         })
 
 // DELETE /users/me -> sterge propriul cont
-        .delete('/me', requireAuth, async(req: any, res, next)=>{
+        .delete('/me', requireAuth, async(req, res, next)=>{
             try{
                 const userId= req.user.id;
 

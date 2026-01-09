@@ -5,10 +5,10 @@
 // - /users -> rute pentru gestionarea utilizatorilor
 
 import { Router } from "express";
-import authRoutes from './auth';
-import projectRoutes from './projects';
-import bugRoutes from './bugs';
-import userRoutes from './users'
+import authRoutes from './auth.js';
+import projectRoutes from './projects.js';
+import bugRoutes from './bugs.js';
+import userRoutes from './users.js'
 
 const router=Router();
 

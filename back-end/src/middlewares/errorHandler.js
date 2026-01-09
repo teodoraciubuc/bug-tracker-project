@@ -3,9 +3,7 @@
 // - afiseaza eroarea in consola serverului
 // - trimite un JSON catre client folosind status si mesaj din eroare
 
-import { Request, Response, NextFunction } from "express";
-
-export default function errorHandler(err: any, req: Request, res: Response, next: NextFunction){
+export default function errorHandler(err, req, res, next){
     console.log(err);
     const status= err.status || 500;
     const message= err.message || 'Server error';

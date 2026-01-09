@@ -1,8 +1,8 @@
-//acest fisier porneste aplicatia Express definita in fisierul 'app.ts':
+//acest fisier porneste aplicatia Express definita in fisierul 'app.js':
 // - citeste portul din variabila PORT
 // - porneste serverul HTTP si afiseaza URL-ul unde API-ul este disponibil
 
-import app from "./app";
+import app from "./app.js";
 
 const port=Number(process.env.PORT) || 3000;
 
