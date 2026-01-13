@@ -6,9 +6,9 @@ import "../styles/Dashboard.css";
 function ProjectPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [role, setRole] = useState(null); 
+  const [bugs,setBugs] = useState([]);
 
-
-  const [bugs,setBugs] = useState([])
    useEffect(() => {
     if (!localStorage.getItem("token")) {
       window.location.href = "/";
@@ -17,23 +17,48 @@ function ProjectPage() {
 
   const joinAsTester = async () => {
   try {
-    await api.post(`/projects/${id}/join`);
+    await api.post(`/projects/${id}/join`,{ role: "TST" });
+    setRole("TST");
     alert("You are now a tester in this project!");
-    window.location.reload(); // sau refetch proiect
-  } catch (err) {
-    alert(err.response?.data?.message || "Cannot join project");
+  } catch  {
+    alert( "Cannot join project");
   }
 };
-  useEffect(() => {
-    api
-      .get(`/bugs/projects/${id}/bugs`)
-      .then((res) => {
-        setBugs(res.data);
-      })
-      .catch(() => {
-        alert("Eroare la incarcare bug-uri");
-      });
-  }, [id]);
+  const joinAsMP = async () => {
+    try {
+      await api.post(`/projects/${id}/join`, { role: "MP" });
+      setRole("MP");
+      alert("You are now a mp in this project!");
+    } catch {
+      alert("Cannot join as MP");
+    }
+  };
+
+//aflam rol user
+useEffect(() => {
+  api.get(`/projects/${id}`)
+    .then(res => {
+      const userId = localStorage.getItem("userId");
+      const member = res.data.members.find(m => m.userId === userId);
+      if (member) {
+        setRole(member.role); // "MP" sau "TST"
+      } else {
+        setRole(null);
+      }
+    })
+    .catch(() => {});
+}, [id]);
+
+useEffect(() => {
+  if (role !== "MP" && role !== "TST") {
+    setBugs([]);
+    return;
+  }
+
+  api.get(`/projects/${id}/bugs`)
+    .then(res => setBugs(res.data))
+    .catch(() => {});
+}, [id, role]);
 
 
   return (
@@ -51,9 +76,28 @@ function ProjectPage() {
 
         <div style={{ marginTop: "auto" }} />
 
-        <button onClick={joinAsTester} className="sidebar-add-btn" style = {{ marginBottom: "-200px"}}>
-          Join project as Tester
-        </button> 
+          {role === null && (
+            <button onClick={joinAsMP} className="sidebar-add-btn">
+              Join as MP
+            </button>
+          )}
+
+          {/* DACA ESTI MP */}
+          {role === "MP" && (
+            <button onClick={joinAsTester} className="sidebar-add-btn">
+              Join as Tester
+            </button>
+          )}
+            {role === "TST" && (
+                <button
+                  className="sidebar-add-btn"
+                  onClick={() => navigate(`/project/${id}/add-bug`)}
+                >
+                  + Add Bug
+                </button>
+          )}
+          
+
 
         <button
           className="sidebar-add-btn"
@@ -66,7 +110,12 @@ function ProjectPage() {
       {/* MAIN CONTENT */}
       <main className="main-content">
         <h1 className="main-title">Project  Bugs</h1>
-
+        {role===null && (
+          <p style={{ color: "gray", marginTop: "20px" }}>
+            You must join this project as Tester to see bugs.
+          </p>
+        )}
+        {(role === "MP" || role === "TST")&& (
         <div className="projects-grid">
           {bugs.map((bug) => (
             <div
@@ -86,6 +135,7 @@ function ProjectPage() {
             </div>
           ))}
         </div>
+        )}
       </main>
 
       {/* RIGHT PANEL */}
@@ -113,5 +163,4 @@ function ProjectPage() {
     </div>
   );
 }
-
 export default ProjectPage;

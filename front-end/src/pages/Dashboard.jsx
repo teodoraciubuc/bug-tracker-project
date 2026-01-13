@@ -25,12 +25,13 @@ function Dashboard() {
     e.preventDefault();
 
     const name = e.target.name.value;
+    const description=e.target.description.value;
     const repositoryUrl = e.target.repo.value;
 
     try {
       const res = await api.post("/projects", {
         name,
-        description: "Project created from dashboard",
+        description,
         repoUrl: repositoryUrl
       });
 
@@ -66,7 +67,8 @@ function Dashboard() {
       className="sidebar-add-form"
       onSubmit={handleAddProject}>
       <input name="name" placeholder="Project Name" required />
-      <input name="repo" placeholder="Repository URL" required />
+      <input name="description" placeholder="Descriere" />
+      <input name="repo" placeholder="Repository URL GitHub" required />
       <button type="submit">+ Add Project</button>
     </form>
   </div>

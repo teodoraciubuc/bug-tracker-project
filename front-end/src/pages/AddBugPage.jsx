@@ -5,6 +5,7 @@ import "../styles/AddBugPage.css";
 
 function AddBugPage() {
   const [title, setTitle] = useState("");
+  const [commitUrl, setCommitUrl] = useState("");
   const [description, setDescription] = useState("");
   const [severity, setSeverity] = useState("LOW");
   const [priority, setPriority] = useState("LOW");
@@ -22,6 +23,7 @@ useEffect(() => {
     try {
       await api.post(`/bugs/projects/${projectId}/bugs`, {
         title,
+        commitUrl,
         description,
         severity,
         priority,
@@ -48,7 +50,15 @@ useEffect(() => {
             required
           />
         </div>
-
+        <div className="form-group">
+          <label>Commit Url</label>
+          <input
+            type="text"
+            value={commitUrl}
+            onChange={(e) => setCommitUrl(e.target.value)}
+            required
+          />
+        </div>
         {/* DESCRIPTION */}
         <div className="form-group">
           <label>Description</label>

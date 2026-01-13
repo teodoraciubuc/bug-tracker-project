@@ -5,16 +5,16 @@
 // - /users -> rute pentru gestionarea utilizatorilor
 
 import { Router } from "express";
-import authRoutes from './auth.js';
-import projectRoutes from './projects.js';
-import bugRoutes from './bugs.js';
-import userRoutes from './users.js'
+import authRoutes from "./auth.js";
+import projectRoutes from "./projects.js";
+import bugRoutes from "./bugs.js";
+import userRoutes from "./users.js";
 
-const router=Router();
+const router = Router();
 
-router.use('/auth', authRoutes);
-router.use('/projects', projectRoutes);
-router.use('/bugs', bugRoutes);
-router.use('/users', userRoutes);
+router.use("/auth", authRoutes);
+router.use("/projects", projectRoutes);
+router.use("/", bugRoutes);
+router.use("/users", userRoutes);
 
 export default router;
