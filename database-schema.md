@@ -20,12 +20,13 @@
 |-< BugStatusHistory (bugId)
 ```
 
-## Legendă 
+## Legendă
+
 - `-<` : reprezentarea relației 1-N
 
-
 ## Descrierea tabelelor din modelul de date
-- `User` : reține informațiile legate de contul și profilul utilizatorului, precum email, parolă hashată, nume, prenume, progresul XP
+
+- `User` : reține informațiile legate de contul și profilul utilizatorului, precum email, parolă hashată, nume, progresul XP
 - `Project` : reține nume, descriere, URL-ul repository
 - `ProjectMember` : leaga utilizatorii de proiecte cu rolul specific: MP sau TST
 - `Bug` : problema identificată într-un proiect, reține titlul, descrierea, severitate, prioritate, status, URL-ul commit-ului
@@ -35,6 +36,7 @@
 - `XPChangeLog` : istoricul modificărilor de XP
 
 ## Cardinalitatea modelului de date
+
 - un utilizator poate crea multiple proiecte și poate fi membru în echipa mai multor proiecte(prin 'ProjectMember'), raporta mai multe bug-uri și i se pot asigna bug-uri
 - un proiect are mai multe bug-uri și mai multi MP
 - fiecare bug are un singur utilizator asignat pentru rezolvare(MP) și un singur reporter(MP sau TST)
@@ -42,14 +44,19 @@
 
 ## Permisiuni in modelul de date
 
-1. **Autentificare** 
+1. **Autentificare**
+
 - orice student își poate crea cont pe baza adresei de email
 
-2. **MP(Membru Proiect)** 
+2. **MP(Membru Proiect)**
+
 - poate crea/edita proiecte
 - poate vizualiza bug-urile proiectelor din care face parte
 - poate să își aloce rezolvarea unor bug-uri daca este membru în proiectul respectiv
 - poate schimba statusul bug-urilor
+- poate adauga comentarii la bug-uri
 
 3. **TST(Tester)**
+
 - poate vizualiza și raporta bug-uri
+- poate adauga comentarii la bug-uri

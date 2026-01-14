@@ -9,7 +9,7 @@ const navigate = useNavigate();
 
 const handleLogout = () => {
   localStorage.removeItem("token");
-  localStorage.removeItem("username"); // daca il mai folosesti undeva
+  localStorage.removeItem("username");
   navigate("/");
 };
 

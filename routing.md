@@ -2,7 +2,7 @@
 
 ## 🔐 Autentificare
 
-- `/login` → Pagina de autentificare (email + parolă).
+- `/` → Pagina de autentificare (email + parolă).
 
 - `/register` → Pagina de creare cont.
 
@@ -10,43 +10,33 @@
 
 - `/dashboard` → Pagina principală care afișează proiectele utilizatorului (MP/TST)
 
-- `/profile` → Pagina de profil (nume, email, XP, level, proiecte, bug-uri asignate).
+- `/profile` → Pagina de profil (nume, email, XP, level, proiecte).
 
 ## 🧩 Proiecte
 
-- `/project/:id` → Pagina unui proiect: listă bug-uri + echipa + butoane de acțiuni.
+- `/project/:id` → Pagina unui proiect: listă bug-uri + membri proiect + butoane de acțiuni (join, edit, promote - in functie de rol).
 
-- `/project/:id/add-bug` → Formular pentru raportarea unui bug într-un proiect.
+- `/project/:id/add-bug` → Formular pentru raportarea unui bug într-un proiect(TST).
 
 ## 🐞 Bug-uri
 
-- `/bug/:id` → Pagina unui bug, cu: detalii bug , status , severitate ,prioritate, link commit, buton „Asignează-mi mie” (MP)
-
-## Urmează să fie implementate
+- `/bug/:id` → Pagina unui bug, cu: detalii bug , status , severitate ,prioritate, link commit, buton „Asignează-mi mie” (MP), buton „Rezolvă bug” (MP asignat), comentarii
 
 ## 📝 Comentarii la bug-uri
 
-- sistem UI de comentarii , form pentru scriere comentariu, listă comentarii sub bug, edit/delete comentariu pentru autor
+- sistem UI de comentarii , form pentru scriere comentariu, listă comentarii sub bug
 
 ## 🔔 Notificări
 
-- icon și badge în navbar, dropdown cu notificări, link către bug/proiect, marcarea ca "citită"
+- icon + listă notificări în interfață, marcarea notificărilor ca „citite”
 
 ## ⭐ Gamificare
 
-- afișarea XP și Level pe profil, progres bar, animații la level up
-
-## 🕒 Istoric statusuri
-
-- timeline vizual sub bug, buline/respective status date în ordine cronologică
-
-## 🔁 Notificări în timp real
-
-- WebSocket / Socket.io, update-uri instant pentru: bug asignat, bug rezolvat, comentariu nou, schimbări de proiect
+- afișarea XP și Level pe profil, actualizare automată la raportarea / rezolvarea bug-urilor
 
 ## Backend
 
-##🔐 Auth
+## 🔐 Auth
 
 - `POST /api/auth/register` -> creează un utilizator nou pe baza emailului și parolei
 
@@ -56,13 +46,13 @@
 
 - `GET /api/users/me` -> returnează informațiile utilizatorului autentificat
 
-- `PATCH /api/users/me` -> actualizează numele, emailul sau parola utilizatorului
-
-- `DELETE /api/users/me` -> șterge contul utilizatorului autentificat
-
 ## 🧩 Projects
 
 - `POST /api/projects` -> creează un proiect nou (userul devine automat MP)
+
+- `GET /api/projects` -> returnează toate proiectele
+
+- `GET /api/projects/:id` -> returnează detaliile unui proiect (inclusiv membri)
 
 - `POST /api/projects/:id/join` -> permite unui user să se alăture proiectului ca TST
 
@@ -70,19 +60,19 @@
 
 - `DELETE /api/projects/:id` -> permite creatorului proiectului să îl steargă
 
+- `PATCH /api/projects/:projectId/members/:userId/promote` -> promovează un membru din TST în MP
+
 ## 🐞 Bugs
 
-- `POST /api/bugs/projects/:projectId/bugs` -> TST raportează un bug nou în cadrul proiectului
+- `POST /api/projects/:projectId/bugs` -> TST raportează un bug nou în cadrul proiectului
 
-- `GET /api/bugs/projects/:projectId/bugs` -> listeaza toate bug-urile asociate proiectului
+- `GET /api/projects/:projectId/bugs` -> listeaza toate bug-urile asociate proiectului
+
+- `GET /api/bugs/bug/:bugId` -> returnează detaliile unui bug
 
 - `PATCH /api/bugs/:bugId/assign` -> MP își poate aloca rezolvarea unui bug
 
 - `PATCH /api/bugs/:bugId/status` -> MP schimba statusul bugului (ex: OPEN -> IN_PROGRESS -> RESOLVED)
-
-- `PATCH /api/bugs/:bugId` -> permite editarea detaliilor unui bug
-
-## Urmează să fie implementate
 
 ## 📝 Comentarii la bug-uri
 
@@ -90,28 +80,12 @@
 
 - `POST /api/bugs/:id/comments` –> adaugă un comentariu nou
 
-- `PATCH /api/comments/:commentId` → editează comentariul
-
-- `DELETE /api/comments/:commentId` -> șterge comentariul
-
 ## 🔔 Notificări
 
 - `GET /api/notifications` –> obține notificările utilizatorului
 
 - `PATCH /api/notifications/:id/read` –> marchează notificarea ca citită
 
-## ⭐ Gamificare (în plan)
+## ⭐ Gamificare
 
-- XP automat la raportare/rezolvare
-
-- Calcul level
-
-## Istoric statusuri (în plan)
-
-- Salvarea modificărilor în `BugStatusHistory`
-
-## 🔁 Notificări în timp real
-
-- Integrare Socket.io
-
-- Update-uri live pentru bug-uri / proiecte
+- XP automat la raportare/rezolvare, calcul automat al nivelului, salvarea istoricului XP
